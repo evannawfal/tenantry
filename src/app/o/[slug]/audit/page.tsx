@@ -85,7 +85,7 @@ export default async function AuditPage(props: PageProps<"/o/[slug]/audit">) {
                 {rows.map((r) => (
                   <tr key={r.id} className="align-top hover:bg-page">
                     <td className="px-5 py-2.5 text-[13px] whitespace-nowrap text-ink-2 tabular">{formatDateTime(r.created_at).replace(" UTC", "")}</td>
-                    <td className="max-w-[200px] truncate px-3 py-2.5 text-[13px]">{r.actor_email ?? <span className="text-ink-3">Stripe</span>}</td>
+                    <td className="max-w-[200px] truncate px-3 py-2.5 text-[13px]">{r.actor_email ?? <span className="text-ink-3">{r.action.startsWith("billing.") ? "Stripe" : "System"}</span>}</td>
                     <td className="px-3 py-2.5">{describeAudit(r)}</td>
                     <td className="px-5 py-2.5 font-mono text-[12px] whitespace-nowrap text-ink-3">{r.action}</td>
                   </tr>

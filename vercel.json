@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "src/app/api/demo-cleanup/route.ts": {
+      "experimentalTriggers": [{ "type": "schedule/v1beta" }]
+    }
+  },
+  "schedules": {
+    "demo-cleanup": {
+      "schedule": "0 8 * * *",
+      "function": "api/demo-cleanup"
+    }
+  }
+}

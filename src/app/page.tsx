@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo, buttonClass } from "@/components/ui";
+import { DEMO_TTL_DAYS, demoEnabled } from "@/lib/demo";
 import { getUser } from "@/lib/auth";
 import { formatPrice } from "@/lib/billing/plans";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +43,9 @@ const facts = [
   },
 ];
 
-export default async function Home() {
+export default async function Home(props: PageProps<"/">) {
+  const demo = demoEnabled();
+  const demoFailed = (await props.searchParams).demo === "failed";
   const supabase = await createClient();
   const [user, { data: plans }] = await Promise.all([getUser(), supabase.from("plans").select("*").order("sort")]);
 
@@ -82,13 +85,26 @@ export default async function Home() {
               their data apart, and the Stripe subscription decides what each plan can do.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href={user ? "/o" : "/signup"} className={`${buttonClass("primary")} h-11 px-5`}>
-                {user ? "Open app" : "Create an organization"}
-              </Link>
+              {demo ? (
+                <form action="/demo" method="post">
+                  <button className={`${buttonClass("primary")} h-11 px-5`}>Try the live demo</button>
+                </form>
+              ) : (
+                <Link href={user ? "/o" : "/signup"} className={`${buttonClass("primary")} h-11 px-5`}>
+                  {user ? "Open app" : "Create an organization"}
+                </Link>
+              )}
               <a href={REPO} className={`${buttonClass("secondary")} h-11 px-5`}>
                 Read the code
               </a>
             </div>
+            {demo ? (
+              <p className="mt-4 max-w-[34rem] text-[13px] text-ink-3">
+                {demoFailed
+                  ? "The demo couldn't be set up just now. Try again in a minute."
+                  : `Opens your own copy of a sample company, signed in as its admin. Billing runs through the Stripe simulator. Demo data is deleted after ${DEMO_TTL_DAYS} days.`}
+              </p>
+            ) : null}
           </div>
 
           <figure className="overflow-hidden rounded-2xl border border-line bg-page shadow-[0_8px_24px_rgba(0,0,0,0.06)]">

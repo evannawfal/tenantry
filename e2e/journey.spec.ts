@@ -183,3 +183,23 @@ test("signed-out visitors are sent to log in", async ({ page }) => {
   await page.goto("/o/northline/billing");
   await expect(page).toHaveURL(/\/login\?next=%2Fo%2Fnorthline%2Fbilling/);
 });
+
+test("the public demo gives each visitor their own company", async ({ page, browser }) => {
+  test.skip(process.env.DEMO_MODE !== "true", "DEMO_MODE is off");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Try the live demo" }).click();
+  await expect(page).toHaveURL(/\/o\/demo-[0-9a-f]{8}$/);
+  await expect(page.getByRole("heading", { name: "Northline Freight" })).toBeVisible();
+  await expect(page.getByText("You're an admin of this organization.")).toBeVisible();
+  await expect(page.getByText("Payment of $29 went through")).toBeVisible();
+  const first = new URL(page.url()).pathname;
+
+  // A second visitor gets a separate company and can't open the first one.
+  const other = await (await browser.newContext()).newPage();
+  await other.goto("/");
+  await other.getByRole("button", { name: "Try the live demo" }).click();
+  await expect(other).toHaveURL(/\/o\/demo-[0-9a-f]{8}$/);
+  expect(new URL(other.url()).pathname).not.toBe(first);
+  await other.goto(first);
+  await expect(other.getByRole("heading", { name: "Not found" })).toBeVisible();
+});

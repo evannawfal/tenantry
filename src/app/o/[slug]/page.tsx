@@ -105,7 +105,7 @@ export default async function OverviewPage(props: PageProps<"/o/[slug]">) {
                   <span className="min-w-0">
                     <span className="text-ink">{describeAudit(a)}</span>
                     {a.actor_email && (a.metadata as { email?: string })?.email === a.actor_email ? null : (
-                      <span className="text-ink-3"> by {a.actor_email ?? "Stripe"}</span>
+                      <span className="text-ink-3"> by {a.actor_email ?? (a.action.startsWith("billing.") ? "Stripe" : "System")}</span>
                     )}
                   </span>
                   <span className="text-[13px] text-ink-3 tabular">{formatDateTime(a.created_at)}</span>
