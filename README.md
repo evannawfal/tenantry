@@ -2,9 +2,11 @@
 
 A multi-tenant SaaS starter built with Next.js, Supabase and Stripe. Each company signs up, invites its team with admin and member roles, and pays through a Stripe subscription. Postgres row-level security keeps one company's data away from every other company, plan limits are enforced inside the database, and every change lands in an audit log nobody can edit.
 
-[How it works](#how-it-works) · [Design choices](#design-choices) · [Run it locally](#run-it-locally) · [Use real Stripe](#use-real-stripe-test-mode) · [Deploy](#deploy) · [Tests](#tests)
+**[Live demo](https://tenantry-six.vercel.app)** · [How it works](#how-it-works) · [Design choices](#design-choices) · [Run it locally](#run-it-locally) · [Use real Stripe](#use-real-stripe-test-mode) · [Deploy](#deploy) · [Tests](#tests)
 
 ![Overview page for an organization on the Pro plan](docs/screenshots/overview.png)
+
+The live demo gives each visitor a private copy of a sample company (a freight firm on the Pro plan with two teammates, six projects and a failed payment that recovered) and signs them in as its admin. Billing runs through the Stripe simulator, so you can upgrade, cancel and fail payments without a card. You can also create an account and start from an empty organization. Demo companies are deleted after 3 days.
 
 ## What it does
 
@@ -129,11 +131,11 @@ The app is a standard Next.js project and runs on Vercel or any Node host.
 4. Set the environment variables from `.env.example` on your host. Use live Stripe keys and live price ids only after testing the whole flow in test mode.
 5. To make yourself a platform admin: `update profiles set is_platform_admin = true where email = 'you@example.com';` in the Supabase SQL editor.
 
-For a public demo without Stripe, set `BILLING_SIMULATOR=true` and leave the Stripe key empty.
+For a public demo without Stripe, set `BILLING_SIMULATOR=true` and leave the Stripe key empty. `DEMO_MODE=true` adds the "Try the live demo" button, which builds a sandbox company per visitor (`src/lib/demo.ts`). A private Vercel schedule in `vercel.json` deletes sandboxes after 3 days; running daily also keeps a free Supabase project from pausing.
 
 ## Tests
 
-**Database and webhook tests** (`tests/`, Vitest, 47 tests) run against the local Supabase stack through PostgREST with real user sessions, the same way the app talks to the database:
+**Database and webhook tests** (`tests/`, Vitest, 48 tests) run against the local Supabase stack through PostgREST with real user sessions, the same way the app talks to the database:
 
 - `tenant-isolation.test.ts`: two companies try to read, update, delete, move and insert each other's rows, invite into each other's organizations, write billing state or audit rows directly, and read `stripe_events`. Also covers member versus admin permissions, the last-admin rule, slug immutability and invitation edge cases.
 - `plan-limits.test.ts`: the 4th project on Free, 8 concurrent inserts, upgrading and downgrading, seats counting open invitations.
