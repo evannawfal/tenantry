@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Start Supabase (Postgres, Auth, REST)
+        run: npx supabase start -x studio,imgproxy,logflare,vector,supavisor,mailpit
+
+      - name: Write .env.local
+        run: node scripts/env.mjs
+
+      - run: npm run typecheck
+      - run: npm run lint
+
+      - name: Database and webhook tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Seed demo data
+        run: npm run seed
+
+      - name: Browser tests
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
